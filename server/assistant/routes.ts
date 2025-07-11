@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { storage } from "../core/storage";
+import { storage } from "../storage/storage";
 
 export function registerAssistantRoutes(app: Express) {
   // Track intelligent assistant behavior and advice

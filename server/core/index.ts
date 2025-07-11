@@ -3,7 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { spawn } from "child_process";
 import { createProxyMiddleware } from 'http-proxy-middleware';
-import { storage } from "./storage";
+import { storage } from "../storage/storage";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";

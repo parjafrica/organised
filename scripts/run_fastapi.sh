@@ -4,19 +4,19 @@ echo "Granada OS - FastAPI Backend Services"
 echo "====================================="
 
 # Kill any existing FastAPI processes
-pkill -f "uvicorn.*main:app" 2>/dev/null
-pkill -f "uvicorn.*bot_service:app" 2>/dev/null
+pkill -f "uvicorn.*server.core.master_orchestrator:app" 2>/dev/null
+pkill -f "uvicorn.*server.bots.bot_service:app" 2>/dev/null
 
 # Wait a moment
 sleep 2
 
 # Start FastAPI services
 echo "Starting FastAPI Main Service on port 8000..."
-cd server && python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload &
+python3 -m uvicorn server.core.master_orchestrator:app --host 0.0.0.0 --port 8000 --reload &
 MAIN_PID=$!
 
 echo "Starting FastAPI Bot Service on port 8001..."
-cd server && python3 -m uvicorn bot_service:app --host 0.0.0.0 --port 8001 --reload &
+python3 -m uvicorn server.bots.bot_service:app --host 0.0.0.0 --port 8001 --reload &
 BOT_PID=$!
 
 # Wait for services to start

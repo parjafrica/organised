@@ -4,13 +4,11 @@ echo "🚀 Granada OS - Unified Development Setup"
 echo "========================================"
 
 # Install all dependencies
-echo "📦 Installing dependencies..."
+echo "📦 Installing Node.js dependencies..."
 npm install
 
-# Install Python dependencies for Wabden
-echo "🐍 Installing Python dependencies for Wabden admin system..."
-cd wabden && python -m pip install -r requirements.txt
-cd ..
+echo "🐍 Installing Python dependencies..."
+python -m pip install -r requirements.txt
 
 # Start services
 echo "🌐 Starting all services..."
@@ -20,4 +18,4 @@ echo ""
 
 # Start main service (includes admin interface)
 echo "🚀 Starting unified Granada OS application..."
-NODE_ENV=development npx tsx server/index.ts
+DATABASE_URL="postgresql://user:password@localhost:5432/granada_os" NODE_ENV=development npx tsx server/core/index.ts

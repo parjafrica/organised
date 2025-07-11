@@ -1,6 +1,6 @@
 
 import type { Express } from "express";
-import { storage } from "../core/storage";
+import { storage } from "../storage/storage";
 import { proposals } from "../../shared/schema";
 import { eq } from "drizzle-orm";
 import { db } from "../database/db";

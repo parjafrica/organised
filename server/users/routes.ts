@@ -1,11 +1,17 @@
 
 import type { Express } from "express";
-import { storage } from "../core/storage";
+import { storage } from "../storage/storage";
 import { setupAuth, requireAuth } from "../auth/auth";
 import session from "express-session";
 import { URLSearchParams } from "url";
 
 export function registerUserRoutes(app: Express) {
+  function createUserWithoutPassword(user: any) {
+    const userCopy = { ...user };
+    delete userCopy.hashedPassword;
+    return userCopy;
+  }
+
   // Authentication endpoints
   app.get('/api/auth/user', async (req, res) => {
     try {
@@ -37,6 +43,7 @@ export function registerUserRoutes(app: Express) {
   });
 
   // Comprehensive user registration with all profile fields
+  /*
   app.post("/api/users/comprehensive-register", async (req, res) => {
     try {
       const profileData = req.body;
@@ -142,7 +149,7 @@ export function registerUserRoutes(app: Express) {
       // Remove password field from userData before saving
       delete userData.password;
 
-      const user = await storage.createUser(userData);
+      const user: any = await storage.createUser(userData);
 
       // Log user behavior tracking for onboarding completion
       try {
@@ -163,7 +170,7 @@ export function registerUserRoutes(app: Express) {
         console.warn('User behavior tracking failed:', trackingError);
       }
 
-      const { hashedPassword: _, ...userWithoutPassword } = user;
+      const userWithoutPassword = createUserWithoutPassword(user);
       res.status(201).json({ 
         message: "Comprehensive profile created successfully", 
         user: userWithoutPassword,
@@ -175,7 +182,7 @@ export function registerUserRoutes(app: Express) {
       res.status(500).json({ message: "Internal server error", error: error.message });
     }
   });
-
+  */
   // Social OAuth routes for onboarding
   app.get('/api/auth/google', (req, res) => {
     const redirectUrl = req.query.redirect || '/';
