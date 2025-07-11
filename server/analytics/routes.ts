@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Express } from 'express';
 
 const router = Router();
 
@@ -8,4 +8,6 @@ router.get('/status', (req, res) => {
 
 // Add more analytics-specific routes here
 
-export default router;
+export function registerAnalyticsRoutes(app: Express) {
+  app.use('/api/analytics', router);
+}

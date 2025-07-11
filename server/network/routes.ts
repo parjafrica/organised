@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { storage } from "../core/storage";
+import { storage } from "../storage";
 
 export function registerNetworkRoutes(app: Express) {
   // Business network endpoint - connects to user database for networking

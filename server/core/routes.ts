@@ -1,23 +1,23 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { registerPaymentRoutes } from "../payments/routes";
+import { storage } from "../storage/storage"; // This path is already correct from the previous change
+import { registerPaymentRoutes } from "../payments/paymentRoutes";
 import { setupAuth, requireAuth } from "../auth/auth";
 import session from "express-session";
 
 import { registerProposalRoutes } from "../proposals/routes";
 import { registerDonorRoutes } from "../donors/routes";
 import { registerUserRoutes } from "../users/routes";
-import { registerStudentRoutes } from "../students/routes";
+import studentRouter from "../students/routes"; // Changed import
 import { registerBusinessRoutes } from "../business/routes";
 import { registerAdminRoutes } from "../admin/routes";
-import { registerBotRoutes } from "../bots/routes";
+// import { registerBotRoutes } from "../bots/routes"; // Temporarily commented out
 import { registerAnalyticsRoutes } from "../analytics/routes";
 import { registerNotificationRoutes } from "../notifications/routes";
 import { registerAssistantRoutes } from "../assistant/routes";
 import { registerNetworkRoutes } from "../network/routes";
-import { registerPersonalizedRoutes } from "../personalized/routes";
-import { registerSystemRoutes } from "../system/routes";
+import personalizedRouter from "../personalized/routes"; // Changed import
+import systemRouter from "../system/routes"; // Changed import
 import { registerDashboardRoutes } from "../dashboard/routes";
 import { registerErrorLoggingRoutes } from "../utils/error_logging";
 
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerUserRoutes(app);
 
   // Register student routes
-  registerStudentRoutes(app);
+  app.use('/api/students', studentRouter); // Changed usage
 
   // Register business routes
   registerBusinessRoutes(app);
@@ -58,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAdminRoutes(app);
 
   // Register bot routes
-  registerBotRoutes(app);
+  // registerBotRoutes(app); // Temporarily commented out
 
   // Register analytics routes
   registerAnalyticsRoutes(app);
@@ -73,10 +73,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerNetworkRoutes(app);
 
   // Register personalized routes
-  registerPersonalizedRoutes(app);
+  app.use('/api/personalized', personalizedRouter); // Changed usage
 
   // Register system routes
-  registerSystemRoutes(app);
+  app.use('/api/system', systemRouter); // Changed usage
 
   // Register dashboard routes
   registerDashboardRoutes(app);
