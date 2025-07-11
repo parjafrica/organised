@@ -1,0 +1,84 @@
+modules = ["nodejs-20", "python-3.11", "web", "bash", "postgresql-16", "python3"]
+run = "npm run dev"
+hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["chromedriver", "chromium", "freetype", "geckodriver", "gitFull", "glibcLocales", "libxcrypt", "playwright-driver", "python3"]
+
+[env]
+DATABASE_URL = "postgresql://user:password@localhost:5432/granada_os"
+
+[deployment]
+deploymentTarget = "autoscale"
+build = ["npm", "run", "build"]
+run = ["npm", "run", "start"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
+
+[[ports]]
+localPort = 5002
+externalPort = 3001
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
+
+[[ports]]
+localPort = 8001
+externalPort = 5000
+
+[[ports]]
+localPort = 8002
+externalPort = 3002
+
+[[ports]]
+localPort = 8003
+externalPort = 4200
+
+[[ports]]
+localPort = 8004
+externalPort = 3003
+
+[[ports]]
+localPort = 8005
+externalPort = 6800
+
+[[ports]]
+localPort = 8006
+externalPort = 5173
+
+[[ports]]
+localPort = 8007
+externalPort = 6000
+
+[[ports]]
+localPort = 8008
+externalPort = 8008
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000

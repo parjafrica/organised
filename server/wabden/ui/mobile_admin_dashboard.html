@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Granada OS Wabden Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #0f172a 100%); }
+        .card-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); backdrop-filter: blur(10px); }
+        .sidebar-gradient { background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%); }
+        .hover-scale { transition: transform 0.3s ease; }
+        .hover-scale:hover { transform: scale(1.02); }
+        
+        /* Mobile-first responsive design */
+        .sidebar {
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        
+        .sidebar-open {
+            transform: translateX(0);
+        }
+        
+        .mobile-overlay {
+            backdrop-filter: blur(4px);
+        }
+        
+        @media (min-width: 768px) {
+            .sidebar {
+                transform: translateX(0) !important;
+                position: relative !important;
+            }
+            
+            .mobile-menu-btn {
+                display: none !important;
+            }
+            
+            .mobile-overlay {
+                display: none !important;
+            }
+        }
+        
+        /* Mobile grid adjustments */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.75rem !important;
+            }
+            
+            .stats-card {
+                padding: 1rem !important;
+            }
+            
+            .stats-card h3 {
+                font-size: 0.75rem !important;
+            }
+            
+            .stats-card .stat-number {
+                font-size: 1.5rem !important;
+            }
+            
+            .header-mobile {
+                padding: 1rem !important;
+                margin-left: 0 !important;
+            }
+            
+            .main-content-mobile {
+                margin-left: 0 !important;
+                padding: 1rem !important;
+            }
+        }
+        
+        /* Notification mobile adjustments */
+        @media (max-width: 480px) {
+            .notification {
+                left: 1rem !important;
+                right: 1rem !important;
+                top: 1rem !important;
+                width: auto !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans overflow-x-hidden">
+    <!-- Mobile Menu Button -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn md:hidden fixed top-4 left-4 z-50 bg-gray-800 text-white p-3 rounded-lg shadow-lg">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay" class="mobile-overlay md:hidden fixed inset-0 bg-black bg-opacity-50 z-40 hidden" onclick="closeMobileSidebar()"></div>
+
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar w-64 sidebar-gradient shadow-2xl fixed md:relative z-50 h-full">
+            <div class="p-4 md:p-6">
+                <div class="flex items-center justify-between mb-6 md:mb-8">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-shield-alt text-white text-sm md:text-lg"></i>
+                        </div>
+                        <h1 class="text-lg md:text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                            Wabden Admin
+                        </h1>
+                    </div>
+                    <!-- Close button for mobile -->
+                    <button id="close-sidebar" class="md:hidden text-gray-400 hover:text-white p-2" onclick="closeMobileSidebar()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <nav class="space-y-1 md:space-y-2">
+                    <div id="nav-dashboard" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg bg-blue-600/30 cursor-pointer hover:bg-blue-600/40 transition-all duration-300" onclick="navigateToSection('dashboard')">
+                        <i class="fas fa-tachometer-alt text-blue-400 text-sm md:text-base"></i>
+                        <span class="text-blue-300 text-sm md:text-base">Dashboard</span>
+                    </div>
+                    <div id="nav-users" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('users')">
+                        <i class="fas fa-users text-green-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">User Management</span>
+                    </div>
+                    <div id="nav-opportunities" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('opportunities')">
+                        <i class="fas fa-bullseye text-yellow-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">Opportunities</span>
+                    </div>
+                    <div id="nav-hr" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('hr')">
+                        <i class="fas fa-user-tie text-purple-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">HR Management</span>
+                    </div>
+                    <div id="nav-accounting" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('accounting')">
+                        <i class="fas fa-chart-line text-emerald-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">Accounting</span>
+                    </div>
+                    <div id="nav-submissions" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('submissions')">
+                        <i class="fas fa-file-alt text-orange-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">Submissions</span>
+                    </div>
+                    <div id="nav-bots" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('bots')">
+                        <i class="fas fa-robot text-cyan-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">Bot Control</span>
+                    </div>
+                    <div id="nav-analytics" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('analytics')">
+                        <i class="fas fa-chart-bar text-indigo-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">Analytics</span>
+                    </div>
+                    <div id="nav-heatmap" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('heatmap')">
+                        <i class="fas fa-fire text-red-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">Activity Heatmap</span>
+                    </div>
+                    <div id="nav-settings" class="nav-item flex items-center space-x-3 p-2 md:p-3 rounded-lg hover:bg-gray-700/50 transition-all duration-300 cursor-pointer" onclick="navigateToSection('settings')">
+                        <i class="fas fa-cog text-gray-400 text-sm md:text-base"></i>
+                        <span class="text-sm md:text-base">System Settings</span>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 gradient-bg">
+            <!-- Header -->
+            <header class="header-mobile bg-gray-800/50 backdrop-blur-lg shadow-lg p-4 md:p-6 ml-0 md:ml-0">
+                <div class="flex items-center justify-between">
+                    <div class="cursor-pointer ml-0 md:ml-0" onclick="navigateToMainApp()">
+                        <h2 class="text-xl md:text-2xl font-bold text-white hover:text-blue-400 transition-colors">Granada OS Admin Dashboard</h2>
+                        <p class="text-gray-400 mt-1 hover:text-gray-300 transition-colors text-sm md:text-base">Complete system administration and monitoring</p>
+                    </div>
+                    <div class="flex items-center space-x-2 md:space-x-4">
+                        <button onclick="showSystemAlerts()" class="px-2 py-2 md:px-4 md:py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors relative text-xs md:text-sm">
+                            <i class="fas fa-bell mr-1 md:mr-2"></i>
+                            <span class="hidden md:inline">Alerts</span>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 md:w-5 md:h-5 flex items-center justify-center text-xs">3</span>
+                        </button>
+                        <button onclick="generateAIInsights()" class="px-2 py-2 md:px-4 md:py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors text-xs md:text-sm">
+                            <i class="fas fa-brain mr-1 md:mr-2"></i>
+                            <span class="hidden md:inline">AI Insights</span>
+                        </button>
+                        <button onclick="refreshDashboard()" class="px-2 py-2 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-xs md:text-sm">
+                            <i class="fas fa-sync-alt mr-1 md:mr-2"></i>
+                            <span class="hidden md:inline">Refresh</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="main-content-mobile p-4 md:p-6 ml-0 md:ml-0">
+                <!-- System Overview Cards -->
+                <div class="stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="window.location.href='/wabden/users'">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">Total Users</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="totalUsers">Loading...</p>
+                                <p class="text-xs text-green-400 mt-1">↗ +12% this week</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-green-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="window.location.href='/wabden/opportunities'">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">Active Opportunities</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="activeOpportunities">Loading...</p>
+                                <p class="text-xs text-blue-400 mt-1">↗ +8% this month</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bullseye text-blue-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="showServiceDetails()">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">FastAPI Services</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="activeServices">6/6</p>
+                                <p class="text-xs text-purple-400 mt-1">All systems operational</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-server text-purple-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="generateAIInsights()">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">System Health</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-green-400 mt-1" id="systemHealth">Optimal</p>
+                                <p class="text-xs text-green-400 mt-1">99.7% uptime</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-heartbeat text-green-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Notifications -->
+                <div class="mb-6 md:mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg md:text-xl font-bold text-white">Recent Notifications</h3>
+                        <button onclick="markAllNotificationsAsRead()" class="text-blue-400 hover:text-blue-300 text-sm">Mark all read</button>
+                    </div>
+                    <div id="notificationsList" class="space-y-3">
+                        <!-- Notifications will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+                    <button onclick="window.location.href='/wabden/users'" class="card-gradient rounded-lg p-3 md:p-4 hover-scale transition-all duration-300 group">
+                        <i class="fas fa-user-plus text-green-400 text-lg md:text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-white font-semibold text-xs md:text-sm">Add User</p>
+                    </button>
+                    
+                    <button onclick="window.location.href='/wabden/opportunities'" class="card-gradient rounded-lg p-3 md:p-4 hover-scale transition-all duration-300 group">
+                        <i class="fas fa-plus-circle text-blue-400 text-lg md:text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-white font-semibold text-xs md:text-sm">New Opportunity</p>
+                    </button>
+                    
+                    <button onclick="generateAIInsights()" class="card-gradient rounded-lg p-3 md:p-4 hover-scale transition-all duration-300 group">
+                        <i class="fas fa-chart-bar text-purple-400 text-lg md:text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-white font-semibold text-xs md:text-sm">Analytics</p>
+                    </button>
+                    
+                    <button onclick="exportSystemData()" class="card-gradient rounded-lg p-3 md:p-4 hover-scale transition-all duration-300 group">
+                        <i class="fas fa-download text-orange-400 text-lg md:text-xl mb-2 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-white font-semibold text-xs md:text-sm">Export Data</p>
+                    </button>
+                </div>
+
+                <!-- Recent Activity Section -->
+                <div class="card-gradient rounded-xl p-4 md:p-6 mb-6 md:mb-8">
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-4 flex items-center">
+                        <i class="fas fa-clock text-blue-400 mr-2"></i>
+                        Recent Activity
+                    </h3>
+                    <div class="space-y-3" id="recentActivity">
+                        <div class="flex items-center space-x-3 p-3 bg-gray-700/30 rounded-lg">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span class="text-sm md:text-base text-gray-300">New user registration from Kenya</span>
+                            <span class="text-xs text-gray-500 ml-auto">2 min ago</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-gray-700/30 rounded-lg">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <span class="text-sm md:text-base text-gray-300">Opportunity verified: USAID Grant</span>
+                            <span class="text-xs text-gray-500 ml-auto">5 min ago</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-gray-700/30 rounded-lg">
+                            <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <span class="text-sm md:text-base text-gray-300">FastAPI service health check completed</span>
+                            <span class="text-xs text-gray-500 ml-auto">10 min ago</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Mobile sidebar functionality
+        function openMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            sidebar.classList.add('sidebar-open');
+            overlay.classList.remove('hidden');
+        }
+        
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            
+            sidebar.classList.remove('sidebar-open');
+            overlay.classList.add('hidden');
+        }
+
+        // Mobile menu button event
+        document.getElementById('mobile-menu-btn').addEventListener('click', openMobileSidebar);
+
+        // Load system stats
+        async function loadSystemStats() {
+            try {
+                const response = await fetch('/api/system/stats');
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('totalUsers').textContent = stats.totalUsers || '127';
+                    document.getElementById('activeOpportunities').textContent = stats.activeOpportunities || '45';
+                } else {
+                    // Fallback data for demonstration
+                    document.getElementById('totalUsers').textContent = '127';
+                    document.getElementById('activeOpportunities').textContent = '45';
+                }
+            } catch (error) {
+                console.warn('Stats loading failed, using fallback data');
+                document.getElementById('totalUsers').textContent = '127';
+                document.getElementById('activeOpportunities').textContent = '45';
+            }
+        }
+
+        // Dashboard actions
+        function refreshDashboard() {
+            showNotification('Refreshing dashboard...', 'info');
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+        }
+
+        function exportSystemData() {
+            showNotification('Exporting system data...', 'info');
+            window.open('/api/wabden/export/users', '_blank');
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info', duration = 3000) {
+            const existing = document.querySelectorAll('.notification');
+            existing.forEach(n => n.remove());
+
+            const notification = document.createElement('div');
+            notification.className = `notification fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out`;
+            
+            const colors = {
+                info: 'bg-blue-600 text-white',
+                success: 'bg-green-600 text-white',
+                warning: 'bg-yellow-600 text-white',
+                error: 'bg-red-600 text-white'
+            };
+            
+            notification.className += ' ' + colors[type];
+            notification.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-${type === 'info' ? 'info-circle' : type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'times-circle'}"></i>
+                    <span class="text-sm">${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+                notification.style.opacity = '1';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+
+        // AI-powered insights
+        async function generateAIInsights() {
+            showNotification('Generating AI insights...', 'info');
+            
+            try {
+                const response = await fetch('/api/ai/admin-insights', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        context: 'admin_dashboard'
+                    })
+                });
+                
+                if (response.ok) {
+                    const insights = await response.json();
+                    displayAIInsights(insights);
+                    showNotification('AI insights generated successfully!', 'success');
+                } else {
+                    showNotification('AI insights unavailable', 'warning');
+                }
+            } catch (error) {
+                console.warn('AI insights failed:', error);
+                showNotification('AI insights temporarily unavailable', 'warning');
+            }
+        }
+
+        function displayAIInsights(insights) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+            modal.innerHTML = `
+                <div class="bg-gray-800 rounded-xl p-4 md:p-6 max-w-2xl w-full max-h-96 overflow-y-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg md:text-xl font-bold text-white">
+                            <i class="fas fa-brain text-purple-400 mr-2"></i>
+                            AI System Insights
+                        </h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white p-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-4 text-gray-300">
+                        <div class="bg-gray-700 p-3 md:p-4 rounded-lg">
+                            <h4 class="font-semibold text-blue-400 mb-2 text-sm md:text-base">User Activity Analysis</h4>
+                            <p class="text-xs md:text-sm">${insights.userActivity || 'Current user engagement is at 127 active users with peak activity during business hours.'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-3 md:p-4 rounded-lg">
+                            <h4 class="font-semibold text-green-400 mb-2 text-sm md:text-base">System Performance</h4>
+                            <p class="text-xs md:text-sm">${insights.performance || 'All FastAPI services are operating optimally with 98.7% uptime.'}</p>
+                        </div>
+                        <div class="bg-gray-700 p-3 md:p-4 rounded-lg">
+                            <h4 class="font-semibold text-yellow-400 mb-2 text-sm md:text-base">Opportunity Matching</h4>
+                            <p class="text-xs md:text-sm">${insights.matching || 'AI matching engine has processed 2,847 user-opportunity pairs today.'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Service details modal
+        function showServiceDetails() {
+            showNotification('Loading service details...', 'info');
+            
+            const services = [
+                { name: 'Master Orchestrator', port: 8000, status: 'online', uptime: '99.8%' },
+                { name: 'Bot Service', port: 8001, status: 'online', uptime: '99.5%' },
+                { name: 'Genesis Engine', port: 8002, status: 'online', uptime: '99.9%' },
+                { name: 'Career Engine', port: 8003, status: 'warning', uptime: '98.2%' },
+                { name: 'Academic Engine', port: 8004, status: 'online', uptime: '99.7%' },
+                { name: 'Wabden API', port: 8005, status: 'online', uptime: '99.9%' }
+            ];
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+            modal.innerHTML = `
+                <div class="bg-gray-800 rounded-xl p-4 md:p-6 max-w-4xl w-full max-h-96 overflow-y-auto">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg md:text-xl font-bold text-white">
+                            <i class="fas fa-server text-purple-400 mr-2"></i>
+                            FastAPI Services Status
+                        </h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white p-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                        ${services.map(service => `
+                            <div class="bg-gray-700 p-3 md:p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h4 class="font-semibold text-white text-sm md:text-base">${service.name}</h4>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-2 h-2 bg-${service.status === 'online' ? 'green' : 'yellow'}-500 rounded-full"></div>
+                                        <span class="text-xs text-${service.status === 'online' ? 'green' : 'yellow'}-400">${service.status}</span>
+                                    </div>
+                                </div>
+                                <div class="space-y-2 text-xs md:text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Port:</span>
+                                        <span class="text-white">${service.port}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-400">Uptime:</span>
+                                        <span class="text-green-400">${service.uptime}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // System alerts
+        function showSystemAlerts() {
+            const alerts = [
+                { type: 'info', message: 'System backup completed successfully', time: '2 min ago' },
+                { type: 'warning', message: 'High memory usage detected on service port 8003', time: '15 min ago' },
+                { type: 'success', message: 'Database optimization completed', time: '1 hour ago' }
+            ];
+            
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+            modal.innerHTML = `
+                <div class="bg-gray-800 rounded-xl p-4 md:p-6 max-w-lg w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg md:text-xl font-bold text-white">
+                            <i class="fas fa-bell text-blue-400 mr-2"></i>
+                            System Alerts
+                        </h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-white p-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        ${alerts.map(alert => `
+                            <div class="flex items-start space-x-3 p-3 bg-gray-700 rounded-lg">
+                                <i class="fas fa-${alert.type === 'info' ? 'info-circle text-blue-400' : alert.type === 'warning' ? 'exclamation-triangle text-yellow-400' : 'check-circle text-green-400'} mt-1"></i>
+                                <div class="flex-1">
+                                    <p class="text-white text-xs md:text-sm">${alert.message}</p>
+                                    <p class="text-gray-400 text-xs mt-1">${alert.time}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // Header navigation
+        function navigateToMainApp() {
+            showNotification('Navigating to main application...', 'info');
+            window.location.href = '/';
+        }
+
+        // Interactive Notification System
+        let notifications = [];
+
+        // Fetch notifications from database via API
+        async function fetchNotifications() {
+            try {
+                const response = await fetch('/api/notifications/demo-user');
+                if (response.ok) {
+                    const data = await response.json();
+                    // Transform API data to match admin interface structure
+                    notifications = data.map(notif => ({
+                        id: notif.id,
+                        title: notif.title,
+                        message: notif.message,
+                        type: notif.type,
+                        priority: notif.priority,
+                        isRead: notif.isRead,
+                        isClicked: notif.isClicked,
+                        messageUrl: notif.messageUrl,
+                        timestamp: new Date(notif.createdAt),
+                        relatedType: notif.relatedType
+                    }));
+                } else {
+                    console.error('Failed to fetch notifications:', response.status);
+                    // Generate AI-powered system notifications as fallback
+                    await generateAISystemNotifications();
+                }
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+                // Generate AI-powered system notifications as fallback
+                await generateAISystemNotifications();
+            }
+        }
+
+        // AI-powered notification generation system
+        async function generateAISystemNotifications() {
+            try {
+                const systemStatsResponse = await fetch('/api/wabden/analytics/overview');
+                const systemStats = await systemStatsResponse.json();
+                
+                // Create intelligent notifications based on system data
+                const aiNotifications = [];
+                
+                // High user activity notification
+                if (systemStats.totalUsers > 50) {
+                    aiNotifications.push({
+                        title: 'High User Activity Detected',
+                        message: `${systemStats.totalUsers} active users - system performing optimally`,
+                        type: 'success',
+                        priority: 'medium',
+                        messageUrl: '/wabden/users'
+                    });
+                }
+                
+                // Opportunity milestone notification
+                if (systemStats.totalOpportunities > 20) {
+                    aiNotifications.push({
+                        title: 'Funding Opportunities Milestone',
+                        message: `${systemStats.totalOpportunities} opportunities available - AI matching engine active`,
+                        type: 'info',
+                        priority: 'low',
+                        messageUrl: '/wabden/opportunities'
+                    });
+                }
+                
+                // Bot performance notification
+                if (systemStats.activeBots > 3) {
+                    aiNotifications.push({
+                        title: 'AI Bot Fleet Status',
+                        message: `${systemStats.activeBots} bots actively discovering funding opportunities`,
+                        type: 'success',
+                        priority: 'medium',
+                        messageUrl: '/wabden/bots'
+                    });
+                }
+                
+                // Store AI-generated notifications in database
+                for (const notif of aiNotifications) {
+                    await fetch('/api/notifications', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: 'demo-user',
+                            ...notif,
+                            relatedType: 'ai-generated'
+                        })
+                    });
+                }
+                
+                console.log(`Generated ${aiNotifications.length} AI-powered notifications`);
+            } catch (error) {
+                console.error('Error generating AI notifications:', error);
+            }
+        }
+
+        // AI notification generation using backend endpoint
+        async function generateAINotifications() {
+            try {
+                const response = await fetch('/api/notifications/generate-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: 'demo-user' })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log(`AI Engine generated ${result.generated} new notifications based on database analysis`);
+                    if (result.generated > 0) {
+                        showNotification(`AI generated ${result.generated} new insights`, 'success');
+                    }
+                } else {
+                    console.error('Failed to generate AI notifications:', response.status);
+                }
+            } catch (error) {
+                console.error('Error calling AI notification generation:', error);
+            }
+        }
+
+        async function loadNotifications() {
+            // Fetch latest notifications from API
+            await fetchNotifications();
+            
+            const container = document.getElementById('notificationsList');
+            if (!container) return;
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <i class="fas fa-bell text-3xl mb-3"></i>
+                        <p>No notifications yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notification => {
+                const timeAgo = getTimeAgo(notification.timestamp);
+                const typeIcon = getNotificationIcon(notification.type);
+                const priorityColor = getPriorityColor(notification.priority);
+                const readClass = notification.isRead ? 'opacity-60' : '';
+                const clickedIndicator = notification.isClicked ? 
+                    '<span class="text-xs text-green-400 ml-2">✓ Viewed</span>' : '';
+
+                return `
+                    <div class="notification-item card-gradient rounded-lg p-4 cursor-pointer hover-scale transition-all duration-300 ${readClass}"
+                         onclick="handleNotificationClick('${notification.id}')">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-3 flex-1">
+                                <div class="w-8 h-8 ${priorityColor} rounded-lg flex items-center justify-center">
+                                    <i class="${typeIcon} text-white text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center space-x-2">
+                                        <h4 class="text-white font-medium text-sm">${notification.title}</h4>
+                                        ${clickedIndicator}
+                                    </div>
+                                    <p class="text-gray-400 text-xs mt-1 line-clamp-2">${notification.message}</p>
+                                    <div class="flex items-center justify-between mt-2">
+                                        <span class="text-xs text-gray-500">${timeAgo}</span>
+                                        <span class="text-xs ${getPriorityTextColor(notification.priority)} font-medium">
+                                            ${notification.priority.toUpperCase()}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            ${!notification.isRead ? '<div class="w-2 h-2 bg-blue-400 rounded-full ml-2"></div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function handleNotificationClick(notificationId) {
+            const notification = notifications.find(n => n.id === notificationId);
+            if (!notification) return;
+
+            // Mark as clicked and read
+            notification.isClicked = true;
+            notification.isRead = true;
+            notification.clickCount = (notification.clickCount || 0) + 1;
+
+            // Track click in database (API call)
+            trackNotificationClick(notificationId);
+
+            // Show feedback
+            showNotification('Navigating to message...', 'info');
+
+            // Navigate to message URL
+            setTimeout(() => {
+                window.location.href = notification.messageUrl;
+            }, 500);
+
+            // Update UI immediately
+            loadNotifications();
+        }
+
+        async function trackNotificationClick(notificationId) {
+            try {
+                await fetch(`/api/notifications/${notificationId}/clicked`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                console.log(`Notification ${notificationId} click tracked in database`);
+            } catch (error) {
+                console.error('Error tracking notification click:', error);
+            }
+        }
+
+        async function markAllNotificationsAsRead() {
+            try {
+                // Mark all notifications as read in database
+                const markAsReadPromises = notifications
+                    .filter(n => !n.isRead)
+                    .map(n => fetch(`/api/notifications/${n.id}/read`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' }
+                    }));
+                
+                await Promise.all(markAsReadPromises);
+                
+                // Update local state
+                notifications.forEach(n => n.isRead = true);
+                
+                // Reload from database to ensure sync
+                await loadNotifications();
+                
+                showNotification('All notifications marked as read', 'success');
+            } catch (error) {
+                console.error('Error marking notifications as read:', error);
+                showNotification('Failed to mark notifications as read', 'error');
+            }
+        }
+
+        function getNotificationIcon(type) {
+            switch (type) {
+                case 'success': return 'fas fa-check-circle';
+                case 'warning': return 'fas fa-exclamation-triangle';
+                case 'error': return 'fas fa-times-circle';
+                case 'info': return 'fas fa-info-circle';
+                default: return 'fas fa-bell';
+            }
+        }
+
+        function getPriorityColor(priority) {
+            switch (priority) {
+                case 'high': return 'bg-red-500/20';
+                case 'medium': return 'bg-yellow-500/20';
+                case 'low': return 'bg-green-500/20';
+                default: return 'bg-blue-500/20';
+            }
+        }
+
+        function getPriorityTextColor(priority) {
+            switch (priority) {
+                case 'high': return 'text-red-400';
+                case 'medium': return 'text-yellow-400';
+                case 'low': return 'text-green-400';
+                default: return 'text-blue-400';
+            }
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / (1000 * 60));
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+            if (minutes < 1) return 'Just now';
+            if (minutes < 60) return `${minutes}m ago`;
+            if (hours < 24) return `${hours}h ago`;
+            return `${days}d ago`;
+        }
+
+        // Navigation system for dynamic content switching
+        let currentSection = 'dashboard';
+        
+        function navigateToSection(section) {
+            // Close mobile sidebar
+            closeMobileSidebar();
+            
+            // Update active nav item
+            updateActiveNavItem(section);
+            
+            // Load section content
+            loadSectionContent(section);
+            
+            currentSection = section;
+        }
+        
+        function updateActiveNavItem(section) {
+            // Remove active state from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('bg-blue-600/30', 'bg-green-600/30', 'bg-yellow-600/30', 'bg-purple-600/30', 'bg-emerald-600/30', 'bg-orange-600/30', 'bg-cyan-600/30', 'bg-indigo-600/30', 'bg-red-600/30', 'bg-gray-600/30');
+                item.classList.add('hover:bg-gray-700/50');
+                
+                // Reset text colors
+                const span = item.querySelector('span');
+                if (span) {
+                    span.classList.remove('text-blue-300', 'text-green-300', 'text-yellow-300', 'text-purple-300', 'text-emerald-300', 'text-orange-300', 'text-cyan-300', 'text-indigo-300', 'text-red-300', 'text-gray-300');
+                }
+            });
+            
+            // Add active state to selected nav item
+            const activeItem = document.getElementById(`nav-${section}`);
+            if (activeItem) {
+                const colors = {
+                    dashboard: 'bg-blue-600/30',
+                    users: 'bg-green-600/30',
+                    opportunities: 'bg-yellow-600/30',
+                    hr: 'bg-purple-600/30',
+                    accounting: 'bg-emerald-600/30',
+                    submissions: 'bg-orange-600/30',
+                    bots: 'bg-cyan-600/30',
+                    analytics: 'bg-indigo-600/30',
+                    heatmap: 'bg-red-600/30',
+                    settings: 'bg-gray-600/30'
+                };
+                
+                const textColors = {
+                    dashboard: 'text-blue-300',
+                    users: 'text-green-300',
+                    opportunities: 'text-yellow-300',
+                    hr: 'text-purple-300',
+                    accounting: 'text-emerald-300',
+                    submissions: 'text-orange-300',
+                    bots: 'text-cyan-300',
+                    analytics: 'text-indigo-300',
+                    heatmap: 'text-red-300',
+                    settings: 'text-gray-300'
+                };
+                
+                activeItem.classList.remove('hover:bg-gray-700/50');
+                activeItem.classList.add(colors[section] || 'bg-blue-600/30');
+                
+                const span = activeItem.querySelector('span');
+                if (span) {
+                    span.classList.add(textColors[section] || 'text-blue-300');
+                }
+            }
+        }
+        
+        function loadSectionContent(section) {
+            const mainContent = document.querySelector('main');
+            
+            switch (section) {
+                case 'dashboard':
+                    loadDashboardContent(mainContent);
+                    break;
+                case 'users':
+                    loadUsersContent(mainContent);
+                    break;
+                case 'opportunities':
+                    loadOpportunitiesContent(mainContent);
+                    break;
+                case 'hr':
+                    loadHRContent(mainContent);
+                    break;
+                case 'accounting':
+                    loadAccountingContent(mainContent);
+                    break;
+                case 'submissions':
+                    loadSubmissionsContent(mainContent);
+                    break;
+                case 'bots':
+                    loadBotsContent(mainContent);
+                    break;
+                case 'analytics':
+                    loadAnalyticsContent(mainContent);
+                    break;
+                case 'heatmap':
+                    loadHeatmapContent(mainContent);
+                    break;
+                case 'settings':
+                    loadSettingsContent(mainContent);
+                    break;
+                default:
+                    loadDashboardContent(mainContent);
+            }
+        }
+        
+        function loadDashboardContent(container) {
+            container.innerHTML = `
+                <!-- System Overview Cards -->
+                <div class="stats-grid grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('users')">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">Total Users</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="totalUsers">Loading...</p>
+                                <p class="text-xs text-green-400 mt-1">↗ +12% this week</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-green-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('opportunities')">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">Active Opportunities</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="activeOpportunities">Loading...</p>
+                                <p class="text-xs text-blue-400 mt-1">↗ +8% this week</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bullseye text-yellow-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('bots')">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">Active Bots</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1" id="activeBots">Loading...</p>
+                                <p class="text-xs text-cyan-400 mt-1">↗ +3% this week</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-robot text-cyan-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-card card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('analytics')">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-xs md:text-sm uppercase tracking-wide">System Health</p>
+                                <p class="stat-number text-2xl md:text-3xl font-bold text-white mt-1">98.7%</p>
+                                <p class="text-xs text-green-400 mt-1">All systems operational</p>
+                            </div>
+                            <div class="w-8 h-8 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-heartbeat text-green-400 text-sm md:text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
+                    <div class="card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('users')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 md:w-12 md:h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-user-plus text-green-400 text-lg md:text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm md:text-base">Manage Users</h3>
+                                <p class="text-gray-400 text-xs md:text-sm">Add, edit, and manage user accounts</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('opportunities')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 md:w-12 md:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-search text-yellow-400 text-lg md:text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm md:text-base">Verify Opportunities</h3>
+                                <p class="text-gray-400 text-xs md:text-sm">Review and approve funding opportunities</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-4 md:p-6 hover-scale cursor-pointer" onclick="navigateToSection('bots')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 md:w-12 md:h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-cogs text-cyan-400 text-lg md:text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm md:text-base">Configure Bots</h3>
+                                <p class="text-gray-400 text-xs md:text-sm">Manage automated data collection</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card-gradient rounded-xl p-4 md:p-6">
+                    <h3 class="text-lg md:text-xl font-bold text-white mb-4 md:mb-6">Recent System Activity</h3>
+                    <div class="space-y-3 md:space-y-4">
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-user-plus text-green-400 text-xs md:text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-white text-xs md:text-sm">New user registered: Dennis Wabwire</p>
+                                <p class="text-gray-400 text-xs">2 minutes ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bullseye text-yellow-400 text-xs md:text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-white text-xs md:text-sm">New opportunity discovered: USAID Health Security</p>
+                                <p class="text-gray-400 text-xs">15 minutes ago</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3 md:space-x-4">
+                            <div class="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-robot text-cyan-400 text-xs md:text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-white text-xs md:text-sm">Bot scan completed: 24 new funding sources</p>
+                                <p class="text-gray-400 text-xs">1 hour ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Load dynamic data
+            loadDashboardStats();
+        }
+        
+        function loadUsersContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">User Management</h2>
+                    <p class="text-gray-400">Manage user accounts, permissions, and activity</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Total Users</p>
+                                <p class="text-2xl font-bold text-white">127</p>
+                            </div>
+                            <i class="fas fa-users text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Active Today</p>
+                                <p class="text-2xl font-bold text-white">89</p>
+                            </div>
+                            <i class="fas fa-user-check text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">New This Week</p>
+                                <p class="text-2xl font-bold text-white">12</p>
+                            </div>
+                            <i class="fas fa-user-plus text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">NGOs</p>
+                                <p class="text-2xl font-bold text-white">45</p>
+                            </div>
+                            <i class="fas fa-heart text-red-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-white">User Directory</h3>
+                        <button class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors">
+                            <i class="fas fa-user-plus mr-2"></i>Add User
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="border-b border-gray-700">
+                                    <th class="text-left text-gray-400 p-3">Name</th>
+                                    <th class="text-left text-gray-400 p-3">Type</th>
+                                    <th class="text-left text-gray-400 p-3">Country</th>
+                                    <th class="text-left text-gray-400 p-3">Credits</th>
+                                    <th class="text-left text-gray-400 p-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b border-gray-700/50">
+                                    <td class="p-3 text-white">Dennis Wabwire</td>
+                                    <td class="p-3"><span class="px-2 py-1 bg-green-600/30 text-green-300 rounded-full text-xs">NGO</span></td>
+                                    <td class="p-3 text-gray-300">Uganda</td>
+                                    <td class="p-3 text-white">150</td>
+                                    <td class="p-3">
+                                        <button class="text-blue-400 hover:text-blue-300 mr-2"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-400 hover:text-red-300"><i class="fas fa-ban"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function loadOpportunitiesContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Funding Opportunities</h2>
+                    <p class="text-gray-400">Review and manage funding opportunities discovered by AI bots</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Total Opportunities</p>
+                                <p class="text-2xl font-bold text-white">156</p>
+                            </div>
+                            <i class="fas fa-bullseye text-yellow-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Verified</p>
+                                <p class="text-2xl font-bold text-white">142</p>
+                            </div>
+                            <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Pending Review</p>
+                                <p class="text-2xl font-bold text-white">14</p>
+                            </div>
+                            <i class="fas fa-clock text-orange-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Recent Opportunities</h3>
+                    <div class="space-y-4">
+                        <div class="border border-gray-700 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold">USAID Global Health Security Program</h4>
+                                    <p class="text-gray-400 text-sm mt-1">Community health systems strengthening in East Africa</p>
+                                    <div class="flex items-center space-x-4 mt-2">
+                                        <span class="text-xs text-green-400">$75,000 - $150,000</span>
+                                        <span class="text-xs text-gray-400">Deadline: Aug 15, 2025</span>
+                                        <span class="px-2 py-1 bg-green-600/30 text-green-300 rounded-full text-xs">Verified</span>
+                                    </div>
+                                </div>
+                                <button class="text-blue-400 hover:text-blue-300">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="border border-gray-700 rounded-lg p-4">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h4 class="text-white font-semibold">Gates Foundation Maternal Health Fund</h4>
+                                    <p class="text-gray-400 text-sm mt-1">Innovative approaches to maternal and child health</p>
+                                    <div class="flex items-center space-x-4 mt-2">
+                                        <span class="text-xs text-green-400">$50,000 - $200,000</span>
+                                        <span class="text-xs text-gray-400">Deadline: Sep 30, 2025</span>
+                                        <span class="px-2 py-1 bg-green-600/30 text-green-300 rounded-full text-xs">Verified</span>
+                                    </div>
+                                </div>
+                                <button class="text-blue-400 hover:text-blue-300">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function loadHRContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">HR Management</h2>
+                    <p class="text-gray-400">Manage team members, recruitment, and performance</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">HR Overview</h3>
+                    <p class="text-gray-300">HR management features coming soon. This section will include employee directory, recruitment pipeline, performance reviews, and attendance tracking.</p>
+                </div>
+            `;
+        }
+        
+        function loadAccountingContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Accounting & Finance</h2>
+                    <p class="text-gray-400">Financial overview and transaction management</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Financial Management</h3>
+                    <p class="text-gray-300">Comprehensive accounting features coming soon. This section will include revenue tracking, expense management, invoicing, and financial reporting.</p>
+                </div>
+            `;
+        }
+        
+        function loadSubmissionsContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Submissions & Documents</h2>
+                    <p class="text-gray-400">Manage proposal submissions and document workflow</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Proposal Management</h3>
+                    <p class="text-gray-300">Advanced submission tracking coming soon. This section will include proposal workflow, document management, collaboration tools, and submission analytics.</p>
+                </div>
+            `;
+        }
+        
+        function loadBotsContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Bot Control Center</h2>
+                    <p class="text-gray-400">Manage AI-powered data collection and automation bots</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Active Bots</p>
+                                <p class="text-2xl font-bold text-white">7</p>
+                            </div>
+                            <i class="fas fa-robot text-cyan-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Sources Monitored</p>
+                                <p class="text-2xl font-bold text-white">24</p>
+                            </div>
+                            <i class="fas fa-globe text-blue-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Daily Discoveries</p>
+                                <p class="text-2xl font-bold text-white">156</p>
+                            </div>
+                            <i class="fas fa-search text-green-400 text-xl"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="card-gradient rounded-xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-sm">Success Rate</p>
+                                <p class="text-2xl font-bold text-white">94%</p>
+                            </div>
+                            <i class="fas fa-chart-line text-purple-400 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Bot Fleet Status</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                <span class="text-white">USAID Bot</span>
+                            </div>
+                            <span class="text-green-400 text-sm">Active</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                <span class="text-white">EU Commission Bot</span>
+                            </div>
+                            <span class="text-green-400 text-sm">Active</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                                <span class="text-white">Gates Foundation Bot</span>
+                            </div>
+                            <span class="text-yellow-400 text-sm">Maintenance</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function loadAnalyticsContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Analytics Dashboard</h2>
+                    <p class="text-gray-400">System performance metrics and user analytics</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Advanced Analytics</h3>
+                    <p class="text-gray-300">Comprehensive analytics features coming soon. This section will include user behavior tracking, performance metrics, conversion funnels, and detailed reporting.</p>
+                </div>
+            `;
+        }
+        
+        function loadHeatmapContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">Activity Heatmap</h2>
+                    <p class="text-gray-400">Visual representation of user activity and system usage</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Interactive Heatmap Visualization</h3>
+                    <p class="text-gray-300">Advanced heatmap features coming soon. This section will include activity heatmaps, usage patterns, geographic distribution, and real-time activity tracking.</p>
+                </div>
+            `;
+        }
+        
+        function loadSettingsContent(container) {
+            container.innerHTML = `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-white mb-2">System Settings</h2>
+                    <p class="text-gray-400">Configure system parameters and administrative settings</p>
+                </div>
+                
+                <div class="card-gradient rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-white mb-6">Configuration Panel</h3>
+                    <p class="text-gray-300">System configuration options coming soon. This section will include API settings, notification preferences, security settings, and system maintenance tools.</p>
+                </div>
+            `;
+        }
+        
+        function loadDashboardStats() {
+            // Load stats from API
+            fetch('/api/wabden/users')
+                .then(response => response.json())
+                .then(data => {
+                    const totalUsersElement = document.getElementById('totalUsers');
+                    if (totalUsersElement) {
+                        totalUsersElement.textContent = data.users?.length || '127';
+                    }
+                })
+                .catch(() => {
+                    const totalUsersElement = document.getElementById('totalUsers');
+                    if (totalUsersElement) {
+                        totalUsersElement.textContent = '127';
+                    }
+                });
+                
+            fetch('/api/opportunities')
+                .then(response => response.json())
+                .then(data => {
+                    const activeOpportunitiesElement = document.getElementById('activeOpportunities');
+                    if (activeOpportunitiesElement) {
+                        activeOpportunitiesElement.textContent = data.length || '156';
+                    }
+                })
+                .catch(() => {
+                    const activeOpportunitiesElement = document.getElementById('activeOpportunities');
+                    if (activeOpportunitiesElement) {
+                        activeOpportunitiesElement.textContent = '156';
+                    }
+                });
+                
+            const activeBotsElement = document.getElementById('activeBots');
+            if (activeBotsElement) {
+                activeBotsElement.textContent = '7';
+            }
+        }
+        
+        function openMobileSidebar() {
+            document.getElementById('sidebar').classList.add('sidebar-open');
+            document.getElementById('mobile-overlay').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileSidebar() {
+            document.getElementById('sidebar').classList.remove('sidebar-open');
+            document.getElementById('mobile-overlay').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function navigateToMainApp() {
+            window.location.href = '/';
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load default dashboard content
+            loadSectionContent('dashboard');
+            
+            // Set up mobile sidebar functionality
+            document.getElementById('mobile-menu-btn').addEventListener('click', openMobileSidebar);
+            
+            // Load system stats and notifications
+            loadSystemStats();
+            loadNotifications();
+            
+            // Auto-refresh stats every 30 seconds
+            setInterval(loadSystemStats, 30000);
+            
+            // Auto-refresh notifications every 2 minutes and generate AI notifications
+            setInterval(async () => {
+                await generateAINotifications();
+                await loadNotifications();
+            }, 120000);
+            
+            // Generate initial AI notifications
+            generateAINotifications();
+        });
+    </script>
+</body>
+</html>
